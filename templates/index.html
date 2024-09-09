@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Segmentation Inference</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            padding: 30px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+
+        form {
+            margin-bottom: 30px;
+        }
+
+        input[type="file"] {
+            padding: 10px;
+            margin-bottom: 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            background-color: #fff;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .image-container {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+
+        .image-container img {
+            max-width: 256px;
+            max-height: 256px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        .loading {
+            display: none;
+            font-size: 16px;
+            color: #888;
+        }
+
+        footer {
+            margin-top: 20px;
+            color: #aaa;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Image Segmentation Inference</h1>
+        <form id="upload-form" enctype="multipart/form-data">
+            <input type="file" id="file-input" name="file" accept="image/*" required />
+            <br>
+            <button type="submit">Upload and Run Inference</button>
+        </form>
+
+        <div class="loading" id="loading-text">Processing image, please wait...</div>
+
+        <div class="image-container" id="results-container" style="display:none;">
+            <div>
+                <h2>Original Image</h2>
+                <img id="original-image" src="" alt="Original Image">
+            </div>
+            <div>
+                <h2>Model Output</h2>
+                <img id="output-image" src="" alt="Output Image">
+            </div>
+        </div>
+
+        <footer>
+            <p>Powered by Flask and PyTorch | Image Segmentation Demo</p>
+        </footer>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            $('#upload-form').on('submit', function (e) {
+                e.preventDefault();
+
+                var formData = new FormData();
+                var fileInput = $('#file-input')[0];
+                if (fileInput.files.length === 0) {
+                    alert("Please upload an image");
+                    return;
+                }
+                formData.append('file', fileInput.files[0]);
+
+                $('#loading-text').show();
+                $('#results-container').hide();
+
+                $.ajax({
+                    url: '/predict',
+                    type: 'POST',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function (data) {
+                        $('#loading-text').hide();
+                        if (data.error) {
+                            alert(data.error);
+                        } else {
+                            $('#original-image').attr('src', 'data:image/png;base64,' + data.original_image);
+                            $('#output-image').attr('src', 'data:image/png;base64,' + data.output_image);
+                            $('#results-container').show();
+                        }
+                    },
+                    error: function () {
+                        $('#loading-text').hide();
+                        alert('Error occurred while uploading the image.');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>
